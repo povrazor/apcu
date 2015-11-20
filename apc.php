@@ -795,7 +795,7 @@ EOB;
 			<tr class=tr-0><td class=td-0>Hit Rate</td><td>$hit_rate_user cache requests/second</td></tr>
 			<tr class=tr-1><td class=td-0>Miss Rate</td><td>$miss_rate_user cache requests/second</td></tr>
 			<tr class=tr-0><td class=td-0>Insert Rate</td><td>$insert_rate_user cache requests/second</td></tr>
-			<tr class=tr-1><td class=td-0>Cache full count</td><td>{$cache['expunges']}</td></tr>
+			<tr class=tr-1><td class=td-0>Cache full count</td><td>{$cache['num_expunges']}</td></tr>
 		</tbody>
 		</table>
 		</div>
@@ -979,6 +979,7 @@ EOB;
 	if($fieldname=='info') {
 		$cols+=2;
 		 echo '<th>',sortheader('T','Timeout',"&OB=".$MYREQUEST['OB']),'</th>';
+		 echo '<th>','Expires in','</th>';
 	}
 	echo '<th>',sortheader('D','Deleted at',"&OB=".$MYREQUEST['OB']),'</th></tr>';
 
@@ -991,7 +992,7 @@ EOB;
 			case 'A': $k=sprintf('%015d-',$entry['access_time']);  	     break;
 			case 'H': $k=sprintf('%015d-',$entry['num_hits']); 	     break;
 			case 'Z': $k=sprintf('%015d-',$entry['mem_size']); 	     break;
-			case 'M': $k=sprintf('%015d-',$entry['mtime']);  break;
+			case 'M': $k=sprintf('%015d-',$entry['modification_time']);  break;
 			case 'C': $k=sprintf('%015d-',$entry['creation_time']);      break;
 			case 'T': $k=sprintf('%015d-',$entry['ttl']);		     break;
 			case 'D': $k=sprintf('%015d-',$entry['deletion_time']);      break;
@@ -1025,14 +1026,24 @@ EOB;
           '<td class="td-n center">',$entry['num_hits'],'</td>',
           '<td class="td-n right">',$entry['mem_size'],'</td>',
           '<td class="td-n center">',date(DATE_FORMAT,$entry['access_time']),'</td>',
-          '<td class="td-n center">',date(DATE_FORMAT,$entry['mtime']),'</td>',
+          '<td class="td-n center">',date(DATE_FORMAT,$entry['modification_time']),'</td>',
           '<td class="td-n center">',date(DATE_FORMAT,$entry['creation_time']),'</td>';
 
         if($fieldname=='info') {
-          if($entry['ttl'])
+          if($entry['ttl']) {
             echo '<td class="td-n center">'.$entry['ttl'].' seconds</td>';
-          else
+            $time_left = ($entry['creation_time'] + $entry['ttl']) - time();
+            if ( $time_left >= 0 ) {
+                echo '<td class="td-n center">'.$time_left.' seconds</td>';
+            }
+            else {
+                echo '<td class="td-n center">Expired</td>';
+            }
+          }
+          else {
             echo '<td class="td-n center">None</td>';
+            echo '<td class="td-n center">-</td>';
+          }
         }
         if ($entry['deletion_time']) {
 
